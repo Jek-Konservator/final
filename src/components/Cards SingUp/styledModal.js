@@ -21,23 +21,23 @@ export const Modal = styled.div`
   z-index: 2;
   position: absolute;
   background-color: #ffffff;
-  padding-top: 10px;
+  margin-top: 5%;
 `
 export const Container = styled.div`
 display: flex;
 justify-content: center;
-margin-top: auto;
 `
 
-export const Container1 = styled.div`
+export const ButtonContainer = styled.div`
 display: flex;
 justify-content: center;
 margin-top: auto;
+margin-bottom: 1%;
 
 Button{
 background-color: #6b6b6b;
 color: #63dafd;
 border: 4px solid #6b6b6b;
-margin-bottom: 15px;
+margin-bottom: 3%;
 }
 `

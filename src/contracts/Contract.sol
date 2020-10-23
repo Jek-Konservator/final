@@ -3,202 +3,175 @@ pragma solidity 0.5.16;
 contract safeTraffic {
 
     struct vehicle {            // Структура машины
-        uint vehicleID;
-        uint ownerID;
-        string category;
-        uint periodOfUse;
-        uint marketValue;
-        bool verified;
-        bool insuranceStatus;
+        uint vehicleID;         //id транспорта
+        uint ownerID;           //id владельца
+        string category;        //категория транспорта
+        uint periodOfUse;       //Время использования в годах
+        uint marketValue;       //Рыночная стоимость
+        bool verified;          //Статус подтверждения
+        bool insuranceStatus;   //Статус страховки
     }
 
     struct driversLicense {     // Структура водительского удостоверения
-        uint ownerID;
-        uint number;
-        string validTime;
-        string category;
-        address ownerAddress;
-        uint activeTo;
-        bool verified;
-        bool active;
+        uint ownerID;            //id владельца
+        uint number;            //Номер удостоверения
+        string validTime;       //Срок действия
+        string category;        //Категория
+        address ownerAddress;   //Адресс владельца
+        uint activeTo;          //срок действия в секундах
+        bool verified;         //статус подтверждения
+        bool active;            //Активна ли
     }
 
-    struct user {               // Структура пользователя
-        uint userID;
+    struct driver {               // Структура пользователя
+        uint driverID;             //id водителя
         string FIO;
-        address payable userAddress;
-        uint role;              // 0 - user, 1 - driver, 2 - DPS
-    }
-
-    struct driver {             // Структура водителя
-        uint userID;
-        string FIO;
-        uint licenseNumber;
-        uint expStartYear;
-        uint DTPcount;
-        uint unpayedFines;
+        address payable driverAddress;      //Адресс водителя
+        uint role;              // 0 - driver, 1 - DPS
+        uint licenseNumber;         //номер лицензии
+        uint expStartYear;             //год начала водительского стажа
+        uint DTPcount;                  //Колличество ДТП
+        uint unpayedFines;              //Неоплаченные штрафы
         uint balance;
-        address payable driverAddress;
-        bool insuranceStatus;
+        bool insuranceStatus;           //статус строховки
     }
 
-    struct DPSofficer {         // Структура сотрудника ДПС
-        uint userID;
-        string FIO;
-        address officerAddress;
+    struct DPSofficer {
+        uint driverID;          //id водителя
+        address driverAddress;  //адресс водителя
     }
 
     struct insuranceRequest {
-        uint requestID;
-        uint requesterID;
-        string requesterFIO;
-        uint vehicleID;
-        uint insuranceFee;
-        address requesterAddress;
-        bool readyToPay;
-        bool payStatus;
+        uint requestID;         //id запроса на страховку
+        uint requesterID;       //id человека который запрашивает
+        string requesterFIO;    //фамилия запрашивающего
+        uint vehicleID;          //id мащины
+        uint insuranceFee;       //страховой взнос
+        address requesterAddress;  //адрес запрашивающего
+        bool readyToPay;            //готовность а оплате
+        bool payStatus;             //статус оплаты
     }
 
     struct DTP {
-        uint DTPid;
-        uint victimID;
-        uint victimLicenseNumber;
-        string DTPdate;
-        bool confirmed;
-        bool insurancePayed;
+        uint DTPid;                 //id ДТП
+        uint victimID;              //id пострадавшего
+        uint victimLicenseNumber;  // номер лицензии пострадавшего     (вод.удс)
+        string DTPdate;             //дата ДТП
+        bool confirmed;             //статус подтверрждения
+        bool insurancePayed;        //статус выплаты страховой
     }
 
     struct fine {
-        uint fineID;
-        uint driverID;
-        uint fineDateInSec;
-        bool payStatus;
+        uint fineID;            //id штрафа
+        uint driverID;          //id водителя
+        uint fineDateInSec;     //дата назначения штрафа в сек
+        bool payStatus;         //статус оплаты
     }
 
-    user[] users;                       // Массив пользователей
-    driver[] drivers;                   // Массив водителей
-    DPSofficer[] DPSofficers;           // Массив сотрудников ДПС
+    driver[] drivers;                       // Массив пользователей
+    DPSofficer[] DPSofficers;               //Массив ДПС-ников
     driversLicense[] driversLicenses;   // Массив водительских удостоверений
     vehicle[] vehicles;                 // Массив транспортных средств
     insuranceRequest[] insuranceRequests;   // Массив запросов на оформление страховки
     DTP[] DTPs;                         // Массив ДТП
-    fine[] fines;
+    fine[] fines;                       // Массив штрафов
 
     address admin = msg.sender;
     address payable ZAddress = 0x0000000000000000000000000000000000000000;
-    address payable insurance = 0x583031D1113aD414F02576BD6afaBfb302140225;
-    address payable bank = 0xdD870fA1b7C4700F2BD7f44238821C26f7392148;
+    address payable insurance = 0x80c4F1f4E464075F8aaDCfc6a0452f7ee918343C;
+    address payable bank = 0x626913D49004E3E44bbA55c2586f1b5A82190a3D;
 
-    modifier IsAdmin {  // Модиaикатор "Является админом"
+    modifier IsAdmin {  // Модификатор "Является админом"
         require(msg.sender == admin, "You are not admin");
         _;
     }
 
     modifier InDriverMode { // Модификатор "В режиме водителя"
-        require(usersMap[msg.sender].role == 1, "You are not in Driver mode");
+        require(driversMap[msg.sender].role == 0, "You are not in Driver mode");
         _;
     }
 
     modifier InDPSmode {    // Модификатор "В режиме сотрудника ДПС"
-        require(usersMap[msg.sender].role == 2, "You are not a DPS officer");
+        require(driversMap[msg.sender].role == 1, "You are not a DPS officer");
         _;
     }
 
-    mapping (uint => string) vehicleCategories;
-    mapping (address => user) usersMap;
-    mapping (string => uint) categoriesByName;
+    mapping (address => driver) driversMap;
 
     constructor () public {
-        vehicleCategories[1] = "A";
-        vehicleCategories[2] = "B";
-        vehicleCategories[3] = "C";
-
-        categoriesByName["A"] = 1;
-        categoriesByName["B"] = 2;
-        categoriesByName["C"] = 3;
+        drivers.push(driver(0, "Иванов Иван Иванович", 0xBBFAE62Bae8c7aAF00597926a41E12107FEf3b35, 2, 0, 2018, 0, 0, 50, false));
+        drivers.push(driver(1, "Семенов Семен Семенович", 0x37f4626F462311112b228e0363151A5Ca9B98ba9, 1, 0, 2015, 0, 0, 50, false));
+        drivers.push(driver(2, "Петров Петр Петрович", 0x11eb5470250A679C1B7b892F86Ef6893CBA9b3fA, 1, 0, 2010, 3, 0, 50, false));
     }
 
-    function regUser(string memory _FIO) public {   // Функция регистрации пользователя
-        require(usersMap[msg.sender].userAddress == ZAddress, "You are already registered");    // Проверка: если человек, который вызвал функцию, уже зарегистрирован, то его регистрировать не нужно дальше функция выполняться не будет.
-        users.push(user(users.length, _FIO, msg.sender, 0));    // Внесение данных в массив пользователей
-        usersMap[msg.sender].userID = users.length - 1;         // Автоматическое внесение ID пользователя в маппинг пользователей
-        usersMap[msg.sender].FIO = _FIO;                        // Автоматическое внесение ФИО в маппинг пользователей
-        usersMap[msg.sender].userAddress = msg.sender;          // Автоматическое внесение адреса пользователя, который вызвал функцию в маппинг пользователей
-        usersMap[msg.sender].role = 0;                          // Выдача роли пользователя в маппинге пользователей
-        drivers.push(driver(usersMap[msg.sender].userID, "null", 0, 0, 0, 0, 0, ZAddress, false)); //создается пустая запись для данного пользователя в массиве водителей. Это необходимо для последующего создания профиля водителя.
-        DPSofficers.push(DPSofficer(usersMap[msg.sender].userID, "null", ZAddress));    //создается пустая запись для данного пользователя в массиве сотрудников.
+    function regDriver(string memory _FIO) public {   // Функция регистрации пользователя
+        require(driversMap[msg.sender].driverAddress == ZAddress, "You are already registered");    // Проверка: если человек, который вызвал функцию, уже зарегистрирован, то его регистрировать не нужно дальше функция выполняться не будет.
+        drivers.push(driver(drivers.length, _FIO, msg.sender, 0, 0, 0, 0, 0, 0, false));    // Внесение данных в массив пользователей
+        driversMap[msg.sender].driverID = drivers.length - 1;         // Автоматическое внесение ID пользователя в маппинг пользователей
+        driversMap[msg.sender].FIO = _FIO;                          // Автоматическое внесение ФИО в маппинг пользователей
+        driversMap[msg.sender].driverAddress = msg.sender;          // Автоматическое внесение адреса пользователя, который вызвал функцию в маппинг пользователей
+        driversMap[msg.sender].role = 0;                            // Выдача роли пользователя в маппинге пользователей
+        driversMap[msg.sender].licenseNumber = 0;
+        driversMap[msg.sender].expStartYear = 0;
+        driversMap[msg.sender].DTPcount = 0;
+        driversMap[msg.sender].unpayedFines = 0;
+        driversMap[msg.sender].balance = 0;
+        driversMap[msg.sender].insuranceStatus = false;
+        DPSofficers.push(DPSofficer(driversMap[msg.sender].driverID, ZAddress));
     }
 
-    function getUserInfo() public view returns (uint, string memory, address, uint) {   // Функция для просмотра своих данных пользователя (в будущем может не понадобиться)
-        require(usersMap[msg.sender].userAddress == msg.sender, "You are not registered");  // Проверка: вызывает ли функцию зарегистрированный пользователь
-        return(usersMap[msg.sender].userID, usersMap[msg.sender].FIO, usersMap[msg.sender].userAddress, usersMap[msg.sender].role); // Возврат данных
+    function getDriverInfo() public view returns (uint, string memory, address, uint/*, uint, uint, uint, uint, bool*/) {   // Функиця просмотра данных своего водительского профиля (в будущем может не понадобиться)
+        require(driversMap[msg.sender].driverAddress == msg.sender, "You have not registered a driver profile");
+        return (driversMap[msg.sender].driverID,
+                driversMap[msg.sender].FIO,
+                driversMap[msg.sender].driverAddress,
+                driversMap[msg.sender].licenseNumber
+                /*driversMap[msg.sender].expStartYear,
+                driversMap[msg.sender].DTPcount,
+                driversMap[msg.sender].unpayedFines,
+                driversMap[msg.sender].balance,
+                driversMap[msg.sender].insuranceStatus*/);
     }
 
-    function regDriverProfile(uint _expStartYear) public {  // Функция регистрации водительского профиля. Необходимо ввести год начала водительского стажа
-        require(usersMap[msg.sender].role == 0, "You are not in User mode");    // Проверка: находится ли пользователь, вызывающий функцию, в режиме пользователя
-        require(drivers[usersMap[msg.sender].userID].driverAddress != usersMap[msg.sender].userAddress, "You have already registered a driver profile");    // Проверка: зарегистрировал ли уже пользователь, вызывающий функцию, свой водительский профиль
-        drivers[usersMap[msg.sender].userID].FIO = usersMap[msg.sender].FIO;    // Внесение ФИО в маппинг пользователей
-        drivers[usersMap[msg.sender].userID].expStartYear = _expStartYear;      // Внесение года начала водительского стажа в маппинг пользователей
-        drivers[usersMap[msg.sender].userID].driverAddress = usersMap[msg.sender].userAddress;  // Присваивание адреса пользователя адресу водителя (Адрес пользователя соответствует адресу водителя)
-        driversLicenses.push(driversLicense(usersMap[msg.sender].userID, 0, "null", "null", ZAddress, 0, false, false));    // Создание пустой записи в массиве водительских удостоверений. Необходимо для последующих проверок при регистрации водительского удостоверения
-    }
-
-    function getDriverInfo() public view returns (uint, string memory, uint, uint, uint, uint, uint, address, bool) {   // Функиця просмотра данных своего водительского профиля (в будущем может не понадобиться)
-        require(drivers[usersMap[msg.sender].userID].driverAddress == usersMap[msg.sender].userAddress, "You have not registered a driver profile");
-        return (drivers[usersMap[msg.sender].userID].userID,
-        drivers[usersMap[msg.sender].userID].FIO,
-        drivers[usersMap[msg.sender].userID].licenseNumber,
-        drivers[usersMap[msg.sender].userID].expStartYear,
-        drivers[usersMap[msg.sender].userID].DTPcount,
-        drivers[usersMap[msg.sender].userID].unpayedFines,
-        drivers[usersMap[msg.sender].userID].balance,
-        drivers[usersMap[msg.sender].userID].driverAddress,
-        drivers[usersMap[msg.sender].userID].insuranceStatus);
-    }
-
-    function getDriversForDPS() public view InDPSmode returns (uint, string memory, uint, uint, uint, uint, uint, address, bool) {    // Функция просмотра водителей (можно вызвать только в режиме ДПС)
+    function getDriversForDPS() public view InDPSmode returns (uint, string memory, address, uint, uint, uint, uint, uint, bool) {    // Функция просмотра водителей (можно вызвать только в режиме ДПС)
         for(uint i = 0; i <= drivers.length; i++) {
-            return (drivers[i].userID, drivers[i].FIO, drivers[i].licenseNumber, drivers[i].expStartYear, drivers[i].DTPcount, drivers[i].unpayedFines, drivers[i].balance, drivers[i].driverAddress, drivers[i].insuranceStatus);
+            return (drivers[i].driverID, drivers[i].FIO, drivers[i].driverAddress, drivers[i].licenseNumber, drivers[i].expStartYear, drivers[i].DTPcount, drivers[i].unpayedFines, drivers[i].balance, drivers[i].insuranceStatus);
         }
     }
 
-    function regDPSofficerProfile(uint _userID) public IsAdmin {    // Функция регистрации сотрудника ДПС (может вызвать только админ)
-        require(DPSofficers[_userID].officerAddress == ZAddress, "DPS officer is already registered");  // Проверка: зарегистрирован ли уже сотрудник
-        DPSofficers[_userID].FIO = users[_userID].FIO;  // Внесение ФИО в массив сотрудников ДПС
-        DPSofficers[_userID].officerAddress = users[_userID].userAddress;   // Присваивание адреса пользователя адресу сотрудника (адрес пользователя соответствует адресу сотрудника)
+    function regDPSofficerProfile(uint _driverID) public IsAdmin {    // Функция регистрации сотрудника ДПС (может вызвать только админ)
+        require(DPSofficers[_driverID].driverAddress == ZAddress, "DPS officer is already registered");  // Проверка: зарегистрирован ли уже сотрудник
+        DPSofficers[_driverID].driverAddress == drivers[_driverID].driverAddress;
     }
 
-    function userMode() public {    // Функция активации режима пользователя
-        require(usersMap[msg.sender].userAddress == msg.sender, "You have not registered");
-        require(usersMap[msg.sender].role != 0, "You are already in User mode");
-        users[usersMap[msg.sender].userID].role = 0;
-        usersMap[msg.sender].role = 0;
+    function return_admin() public view returns (address) {
+        return(admin);
     }
 
     function driverMode() public {  // Функция активации режима водителя
-        require(drivers[usersMap[msg.sender].userID].driverAddress == usersMap[msg.sender].userAddress, "You have not registered a driver profile");
-        require(usersMap[msg.sender].role != 1, "You are already in Driver mode");
-        users[usersMap[msg.sender].userID].role = 1;
-        usersMap[msg.sender].role = 1;
+        require(drivers[driversMap[msg.sender].driverID].driverAddress != ZAddress, "You have not registered a driver profile");
+        require(driversMap[msg.sender].role != 0, "You are already in Driver mode");
+        drivers[driversMap[msg.sender].driverID].role = 0;
+        driversMap[msg.sender].role = 0;
     }
 
     function DPSmode() public { // Функция активации режима сотрудника ДПС
-        require(DPSofficers[usersMap[msg.sender].userID].officerAddress == usersMap[msg.sender].userAddress, "You are not DPS officer");
-        require(usersMap[msg.sender].role != 2, "You are already in DPS mode");
-        users[usersMap[msg.sender].userID].role = 2;
-        usersMap[msg.sender].role = 2;
+        require(DPSofficers[driversMap[msg.sender].driverID].driverAddress != ZAddress, "You are not DPS officer");
+        require(driversMap[msg.sender].role != 1, "You are already in DPS mode");
+        drivers[driversMap[msg.sender].driverID].role = 1;
+        driversMap[msg.sender].role = 1;
     }
 
     function regDriversLicense(uint _number, string memory _validTime, string memory _categoryLetter) public InDriverMode { // Функция регистрации водительского удостоверения (можно вызвать только в режиме водителя)
-        require(_number != driversLicenses[usersMap[msg.sender].userID].number, "License with this number is already registered");
+        require(_number != driversLicenses[driversMap[msg.sender].driverID].number, "License with this number is already registered");
         //require(_categoryLetter == "A", "Category does not exist"); // Категория существует (Будет реализовано в интерфейсе)
-        driversLicenses[usersMap[msg.sender].userID].number = _number;
-        driversLicenses[usersMap[msg.sender].userID].validTime = _validTime;
-        driversLicenses[usersMap[msg.sender].userID].category = _categoryLetter;
-        driversLicenses[usersMap[msg.sender].userID].ownerAddress = msg.sender;
+        driversLicenses[driversMap[msg.sender].driverID].number = _number;
+        driversLicenses[driversMap[msg.sender].driverID].validTime = _validTime;
+        driversLicenses[driversMap[msg.sender].driverID].category = _categoryLetter;
+        driversLicenses[driversMap[msg.sender].driverID].ownerAddress = msg.sender;
     }
 
-    function getDriversLicenses() public view InDPSmode returns (uint, uint, string memory, string memory, address, bool, bool) {  // Функция просмотра всех зарегистрированных водительских удостоверений (можно вызвать только в режиме ДПС). Сотрудник ДПС смотрит все заявки на регистрацию и подтверждает удостоверения по ID.
+    function getDriversLicensesForDPS() public view InDPSmode returns (uint, uint, string memory, string memory, address, bool, bool) {  // Функция просмотра всех зарегистрированных водительских удостоверений (можно вызвать только в режиме ДПС). Сотрудник ДПС смотрит все заявки на регистрацию и подтверждает удостоверения по ID.
         for(uint i = 0; i <= driversLicenses.length; i++) {
             require(driversLicenses[i].active == false);
             return(driversLicenses[i].ownerID, driversLicenses[i].number, driversLicenses[i].validTime, driversLicenses[i].category, driversLicenses[i].ownerAddress, driversLicenses[i].verified, driversLicenses[i].active);
@@ -215,10 +188,10 @@ contract safeTraffic {
 
 
     function driversLicenseExtend() public InDriverMode {   // Функция продления срока действия водительского удостоверения (можно вызвать только в режиме водителя)
-        require(driversLicenses[usersMap[msg.sender].userID].ownerAddress == msg.sender, "You don't have a drivers license");
-        require(driversLicenses[usersMap[msg.sender].userID].active == true, "License is not active");
-        require(block.timestamp > driversLicenses[usersMap[msg.sender].userID].activeTo - 5*30, "Too early to expand");
-        driversLicenses[usersMap[msg.sender].userID].activeTo = block.timestamp + 365*10*5;
+        require(driversLicenses[driversMap[msg.sender].driverID].ownerAddress == msg.sender, "You don't have a drivers license");
+        require(driversLicenses[driversMap[msg.sender].driverID].active == true, "License is not active");
+        require(block.timestamp > driversLicenses[driversMap[msg.sender].driverID].activeTo - 5*30, "Too early to expand");
+        driversLicenses[driversMap[msg.sender].driverID].activeTo = block.timestamp + 365*10*5;
     }
 
     function deactivateDriversLicense(uint _ownerID) public InDPSmode { // Функция деактивации водительского удостоверения (можно вызвать только в режиме ДПС)
@@ -227,8 +200,8 @@ contract safeTraffic {
     }
 
     function registerVehicle(string memory _categoryLetter, uint _periodOfUse, uint _marketValue) public InDriverMode { // Функция регистрации транспортного средства (можно вызвать только в режиме водителя)
-        require(driversLicenses[usersMap[msg.sender].userID].verified == true, "License is not verified");
-        vehicles.push(vehicle(vehicles.length, usersMap[msg.sender].userID, _categoryLetter, _periodOfUse, _marketValue, false, false));
+        require(driversLicenses[driversMap[msg.sender].driverID].verified == true, "License is not verified");
+        vehicles.push(vehicle(vehicles.length, driversMap[msg.sender].driverID, _categoryLetter, _periodOfUse, _marketValue, false, false));
     }
 
     function getVehiclesForDPS() public view InDPSmode returns (uint, uint, string memory, uint, uint, bool) { // Функция просмотра зарегистрированных транспортных средств (может вызвать только в режиме ДПС)
@@ -243,18 +216,18 @@ contract safeTraffic {
     }
 
     function getVehiclesForDriver() public view InDriverMode returns (uint, uint, string memory, uint, uint, bool) { // Функция просмотра транспортных средств пользователя (можно вызвать только в режиме водителя)
-        require(vehicles[usersMap[msg.sender].userID].ownerID == usersMap[msg.sender].userID);
+        require(vehicles[driversMap[msg.sender].driverID].ownerID == driversMap[msg.sender].driverID);
         for(uint i = 0; i <= vehicles.length; i++) {
             return(vehicles[i].vehicleID, vehicles[i].ownerID, vehicles[i].category, vehicles[i].periodOfUse, vehicles[i].marketValue, vehicles[i].verified);
         }
     }
 
     function requestInsurance(string memory _FIO, uint _vehicleID) public InDriverMode {   // Функция на оформление запроса на страховку (можно вызвать только в режиме водителя)
-        require(driversLicenses[usersMap[msg.sender].userID].active == true, "Drivers license is not active");
-        require(drivers[usersMap[msg.sender].userID].insuranceStatus == false, "You have already payed an insurance fee");
-        require(vehicles[_vehicleID].ownerID == usersMap[msg.sender].userID);
+        require(driversLicenses[driversMap[msg.sender].driverID].active == true, "Drivers license is not active");
+        require(drivers[driversMap[msg.sender].driverID].insuranceStatus == false, "You have already payed an insurance fee");
+        require(vehicles[_vehicleID].ownerID == driversMap[msg.sender].driverID);
         require(vehicles[_vehicleID].verified == true);
-        insuranceRequests.push(insuranceRequest(insuranceRequests.length, usersMap[msg.sender].userID, _FIO, _vehicleID, 0, usersMap[msg.sender].userAddress, false, false));
+        insuranceRequests.push(insuranceRequest(insuranceRequests.length, driversMap[msg.sender].driverID, _FIO, _vehicleID, 0, driversMap[msg.sender].driverAddress, false, false));
     }
 
     function getInsuranceRequests() public view returns(uint, uint, string memory, uint, address) { // Функция вывода всех запросов на страховку
@@ -297,10 +270,10 @@ contract safeTraffic {
         require(insuranceRequests[_requestID].readyToPay == true, "Insurance request is not verified");
         require(insuranceRequests[_requestID].payStatus == false, "Insurance fee is already payed");
         insurance.transfer(insuranceRequests[_requestID].insuranceFee);
-        drivers[usersMap[msg.sender].userID].balance = drivers[usersMap[msg.sender].userID].balance - insuranceRequests[_requestID].insuranceFee;
+        drivers[driversMap[msg.sender].driverID].balance = drivers[driversMap[msg.sender].driverID].balance - insuranceRequests[_requestID].insuranceFee;
         insuranceRequests[_requestID].readyToPay = false;
         insuranceRequests[_requestID].payStatus = true;
-        drivers[usersMap[msg.sender].userID].insuranceStatus = true;
+        drivers[driversMap[msg.sender].driverID].insuranceStatus = true;
     }
 
     function registerDTP(uint _victimID, string memory _DTPdate) public InDPSmode { // Функция регистрации ДТП (можно вызвать только в режиме ДПС)
@@ -310,13 +283,13 @@ contract safeTraffic {
 
     function getDTPsForDriver() public view InDriverMode returns(uint, uint, uint, string memory, bool) {    // Функция просмотра ДТП для водителя, вызывающего функцию (можно вызвать только в режиме водителя)
         for(uint i = 0; i <= DTPs.length; i++) {
-            require(DTPs[i].victimLicenseNumber == drivers[usersMap[msg.sender].userID].licenseNumber);
+            require(DTPs[i].victimLicenseNumber == drivers[driversMap[msg.sender].driverID].licenseNumber);
             return(DTPs[i].DTPid, DTPs[i].victimID, DTPs[i].victimLicenseNumber, DTPs[i].DTPdate, DTPs[i].confirmed);
         }
     }
 
     function confirmDTP(uint _DTPid) public InDriverMode {  // Функция подтверждения факта ДТП водителем (можно вызвать только в режиме водителя)
-        require(DTPs[_DTPid].victimLicenseNumber == drivers[usersMap[msg.sender].userID].licenseNumber, "Drivers license check error");
+        require(DTPs[_DTPid].victimLicenseNumber == drivers[driversMap[msg.sender].driverID].licenseNumber, "Drivers license check error");
         require(DTPs[_DTPid].confirmed == false, "DTP case is already confirmed");
         DTPs[_DTPid].confirmed = true;
     }
@@ -334,18 +307,18 @@ contract safeTraffic {
 
     function getFinesForDriver() public view InDriverMode returns(uint, uint, uint, bool) { // Функция просмотра штрафов водителя (можно вызвать только в режиме водителя)
         for(uint i = 0; i <= DTPs.length; i++) {
-            require(fines[i].driverID == usersMap[msg.sender].userID);
+            require(fines[i].driverID == driversMap[msg.sender].driverID);
             return(fines[i].fineID, fines[i].driverID, fines[i].fineDateInSec, fines[i].payStatus);
         }
     }
 
     function payFine(uint _fineID) public InDriverMode {    // Функция оплаты штрафа (можно вызвать только в режиме водителя)
-        require(fines[_fineID].driverID == usersMap[msg.sender].userID, "That's not your fine");
+        require(fines[_fineID].driverID == driversMap[msg.sender].driverID, "That's not your fine");
         if(block.timestamp > fines[_fineID].fineDateInSec + 5*5) {
-            insurance.transfer(10);
+            bank.transfer(10);
         }
         else {
-            insurance.transfer(5);
+            bank.transfer(5);
         }
     }
 

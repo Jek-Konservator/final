@@ -1,4 +1,5 @@
 import { createGlobalStyle } from "styled-components";
+import styled from "styled-components"
 
 export const GlobalStyle = createGlobalStyle`
 
@@ -13,4 +14,9 @@ body {
     height: 100vh;
     width: 100%;
 }
+
 `;
+
+export const Main = styled.div`
+display: flex;
+`

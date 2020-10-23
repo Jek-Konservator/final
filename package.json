@@ -9,8 +9,9 @@
     "@testing-library/user-event": "^7.2.1",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
-    "react-scripts": "3.4.3",
-    "styled-components": "^5.2.0"
+    "react-scripts": "^3.4.4",
+    "styled-components": "^5.2.0",
+    "truffle": "^5.1.49"
   },
   "scripts": {
     "start": "react-scripts start",

@@ -8,6 +8,7 @@ export const Headerstyle = styled.div`
   font-family: fantasy;
   font-size: 30px;
   display: flex;
+  justify-content: space-between;
   align-items: center;
   padding-left: 15px;
 `;
@@ -15,5 +16,11 @@ export const Headerstyle = styled.div`
 export const Container = styled.div`
   display: flex;
   justify-content: flex-end;
-  padding-left: 1350px;
+  margin-right: 15px;
+`;
+
+export const IconsContainer = styled.div`
+  width: 150px;
+  display: flex;
+  justify-content: space-between;
 `;
