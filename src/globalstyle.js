@@ -17,6 +17,15 @@ body {
 
 `;
 
-export const Main = styled.div`
+export const Main1 = styled.div`
+display: flex;
+`
+export const Main2 = styled.div`
+display: flex;
+`
+export const Main3 = styled.div`
+display: flex;
+`
+export const Main4 = styled.div`
 display: flex;
 `

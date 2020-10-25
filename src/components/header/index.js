@@ -21,7 +21,8 @@ export const Header = () => {
 
     return(
         <Headerstyle>
-                <>Безопасносное дорожное движение</>
+                <div>Безопасносное дорожное движение</div>
+            <div>{account}</div>
                 <Container>
                     <IconsContainer>
                         <AccountCircleRoundedIcon onClick={toggleGetDriverInfo}/>

@@ -3,73 +3,73 @@ pragma solidity 0.5.16;
 contract safeTraffic {
 
     struct vehicle {            // Структура машины
-        uint vehicleID;         //id транспорта
-        uint ownerID;           //id владельца
-        string category;        //категория транспорта
-        uint periodOfUse;       //Время использования в годах
-        uint marketValue;       //Рыночная стоимость
-        bool verified;          //Статус подтверждения
-        bool insuranceStatus;   //Статус страховки
+        uint vehicleID;
+        uint ownerID;
+        string category;
+        uint periodOfUse;
+        uint marketValue;
+        bool verified;
+        bool insuranceStatus;
     }
 
     struct driversLicense {     // Структура водительского удостоверения
-        uint ownerID;            //id владельца
-        uint number;            //Номер удостоверения
-        string validTime;       //Срок действия
-        string category;        //Категория
-        address ownerAddress;   //Адресс владельца
-        uint activeTo;          //срок действия в секундах
-        bool verified;         //статус подтверждения
-        bool active;            //Активна ли
+        uint ownerID;
+        uint number;
+        string validTime;
+        string category;
+        address ownerAddress;
+        uint activeTo;
+        bool verified;
+        bool active;
     }
 
     struct driver {               // Структура пользователя
-        uint driverID;             //id водителя
+        uint driverID;
         string FIO;
-        address payable driverAddress;      //Адресс водителя
+        address payable driverAddress;
         uint role;              // 0 - driver, 1 - DPS
-        uint licenseNumber;         //номер лицензии
-        uint expStartYear;             //год начала водительского стажа
-        uint DTPcount;                  //Колличество ДТП
-        uint unpayedFines;              //Неоплаченные штрафы
+        uint licenseNumber;
+        uint expStartYear;
+        uint DTPcount;
+        uint unpayedFines;
         uint balance;
-        bool insuranceStatus;           //статус строховки
+        bool insuranceStatus;
     }
 
     struct DPSofficer {
-        uint driverID;          //id водителя
-        address driverAddress;  //адресс водителя
+        uint driverID;
+        address driverAddress;
     }
 
     struct insuranceRequest {
-        uint requestID;         //id запроса на страховку
-        uint requesterID;       //id человека который запрашивает
-        string requesterFIO;    //фамилия запрашивающего
-        uint vehicleID;          //id мащины
-        uint insuranceFee;       //страховой взнос
-        address requesterAddress;  //адрес запрашивающего
-        bool readyToPay;            //готовность а оплате
-        bool payStatus;             //статус оплаты
+        uint requestID;
+        uint requesterID;
+        string requesterFIO;
+        uint vehicleID;
+        uint insuranceFee;
+        address requesterAddress;
+        bool readyToPay;
+        bool payStatus;
     }
 
     struct DTP {
-        uint DTPid;                 //id ДТП
-        uint victimID;              //id пострадавшего
-        uint victimLicenseNumber;  // номер лицензии пострадавшего     (вод.удс)
-        string DTPdate;             //дата ДТП
-        bool confirmed;             //статус подтверрждения
-        bool insurancePayed;        //статус выплаты страховой
+        uint DTPid;
+        uint victimID;
+        uint victimLicenseNumber;
+        string DTPdate;
+        bool confirmed;
+        bool insurancePayed;
     }
 
     struct fine {
-        uint fineID;            //id штрафа
-        uint driverID;          //id водителя
-        uint fineDateInSec;     //дата назначения штрафа в сек
-        bool payStatus;         //статус оплаты
+        uint fineID;
+        uint driverID;
+        uint fineDateInSec;
+        bool payStatus;
     }
 
     driver[] drivers;                       // Массив пользователей
-    DPSofficer[] DPSofficers;               //Массив ДПС-ников
+    DPSofficer[] DPSofficers;
     driversLicense[] driversLicenses;   // Массив водительских удостоверений
     vehicle[] vehicles;                 // Массив транспортных средств
     insuranceRequest[] insuranceRequests;   // Массив запросов на оформление страховки
@@ -120,17 +120,17 @@ contract safeTraffic {
         DPSofficers.push(DPSofficer(driversMap[msg.sender].driverID, ZAddress));
     }
 
-    function getDriverInfo() public view returns (uint, string memory, address, uint/*, uint, uint, uint, uint, bool*/) {   // Функиця просмотра данных своего водительского профиля (в будущем может не понадобиться)
+    function getDriverInfo() public view returns (uint, string memory, address, uint, uint, uint, uint, uint, bool) {   // Функиця просмотра данных своего водительского профиля (в будущем может не понадобиться)
         require(driversMap[msg.sender].driverAddress == msg.sender, "You have not registered a driver profile");
         return (driversMap[msg.sender].driverID,
                 driversMap[msg.sender].FIO,
                 driversMap[msg.sender].driverAddress,
-                driversMap[msg.sender].licenseNumber
-                /*driversMap[msg.sender].expStartYear,
+                driversMap[msg.sender].licenseNumber,
+                driversMap[msg.sender].expStartYear,
                 driversMap[msg.sender].DTPcount,
                 driversMap[msg.sender].unpayedFines,
                 driversMap[msg.sender].balance,
-                driversMap[msg.sender].insuranceStatus*/);
+                driversMap[msg.sender].insuranceStatus);
     }
 
     function getDriversForDPS() public view InDPSmode returns (uint, string memory, address, uint, uint, uint, uint, uint, bool) {    // Функция просмотра водителей (можно вызвать только в режиме ДПС)
@@ -141,11 +141,7 @@ contract safeTraffic {
 
     function regDPSofficerProfile(uint _driverID) public IsAdmin {    // Функция регистрации сотрудника ДПС (может вызвать только админ)
         require(DPSofficers[_driverID].driverAddress == ZAddress, "DPS officer is already registered");  // Проверка: зарегистрирован ли уже сотрудник
-        DPSofficers[_driverID].driverAddress == drivers[_driverID].driverAddress;
-    }
-
-    function return_admin() public view returns (address) {
-        return(admin);
+        DPSofficers[_driverID].driverAddress = drivers[_driverID].driverAddress;
     }
 
     function driverMode() public {  // Функция активации режима водителя
@@ -305,12 +301,12 @@ contract safeTraffic {
         fines.push(fine(fines.length, _driverID, block.timestamp, false));
     }
 
-    function getFinesForDriver() public view InDriverMode returns(uint, uint, uint, bool) { // Функция просмотра штрафов водителя (можно вызвать только в режиме водителя)
+    /*function getFinesForDriver() public view InDriverMode returns(uint, uint, uint, bool) { // Функция просмотра штрафов водителя (можно вызвать только в режиме водителя)
         for(uint i = 0; i <= DTPs.length; i++) {
             require(fines[i].driverID == driversMap[msg.sender].driverID);
             return(fines[i].fineID, fines[i].driverID, fines[i].fineDateInSec, fines[i].payStatus);
         }
-    }
+    }*/
 
     function payFine(uint _fineID) public InDriverMode {    // Функция оплаты штрафа (можно вызвать только в режиме водителя)
         require(fines[_fineID].driverID == driversMap[msg.sender].driverID, "That's not your fine");
