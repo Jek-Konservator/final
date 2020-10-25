@@ -120,7 +120,7 @@ contract safeTraffic {
         DPSofficers.push(DPSofficer(driversMap[msg.sender].driverID, ZAddress));
     }
 
-    function getDriverInfo() public view returns (uint, string memory, address, uint, uint, uint, uint, uint, bool) {   // Функиця просмотра данных своего водительского профиля (в будущем может не понадобиться)
+    function getDriverInfo() public view returns (uint, string memory, address, uint, uint, uint,uint /*uint, uint, bool*/) {   // Функиця просмотра данных своего водительского профиля (в будущем может не понадобиться)
         require(driversMap[msg.sender].driverAddress == msg.sender, "You have not registered a driver profile");
         return (driversMap[msg.sender].driverID,
                 driversMap[msg.sender].FIO,
@@ -128,9 +128,17 @@ contract safeTraffic {
                 driversMap[msg.sender].licenseNumber,
                 driversMap[msg.sender].expStartYear,
                 driversMap[msg.sender].DTPcount,
-                driversMap[msg.sender].unpayedFines,
+                driversMap[msg.sender].role
+                /*driversMap[msg.sender].unpayedFines,
                 driversMap[msg.sender].balance,
-                driversMap[msg.sender].insuranceStatus);
+                driversMap[msg.sender].insuranceStatus*/);
+    }
+
+    function admins() public view returns (address){
+        return(admin);
+    }
+    function Insurance() public view returns (address){
+        return(insurance);
     }
 
     function getDriversForDPS() public view InDPSmode returns (uint, string memory, address, uint, uint, uint, uint, uint, bool) {    // Функция просмотра водителей (можно вызвать только в режиме ДПС)

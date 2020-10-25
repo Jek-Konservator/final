@@ -20,9 +20,9 @@ export const UseGetDriverInfo = () =>{
                     <div>Номер лицензии:{dataGetDriverInfo[3]}</div>
                     <div>Стаж воздения:{dataGetDriverInfo[4]}</div>
                     <div>Количество ДТП:{dataGetDriverInfo[5]}</div>
-                    <div>Неоплаченные штрафы:{dataGetDriverInfo[6]}</div>
-                    <div>Баланс:{dataGetDriverInfo[7]}</div>
-                    <div>Статус страховки:{dataGetDriverInfo[8]}</div>
+                    <div>Роль:{dataGetDriverInfo[6]}</div>
+                   {/* <div>Баланс:{dataGetDriverInfo[7]}</div>
+                    <div>Статус страховки:{dataGetDriverInfo[8]}</div>*/}
                     <ModalContainer>
                         <Button onClick={toggleGetDriverInfo}>Отправить</Button>
                     </ModalContainer>

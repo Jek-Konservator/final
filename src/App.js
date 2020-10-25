@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useCallback} from 'react';
-import {GlobalStyle, Main1, Main2, Main3, Main4} from "./globalstyle";
+import {GlobalStyle, NEW, DRIVER1, DPS1, ADMIN, INSURANCE, DRIVER2, DPS2} from "./globalstyle";
 import {Header} from "./components/header/";
 import {UseSingUp} from "./components/Functions/Cards SingUp/modal";
 import Web3 from "web3";
@@ -66,6 +66,11 @@ const App = () => {
     const [dataGetDTPsForDriver, setDataGetDTPsForDriver] = useState();
     const [dataGetFinesForDriver, setDataGetFinesForDriver] = useState();
 
+    const [modeNew, setmodeNew] = useState(true);
+    const [modeDriver, setmodeDriver] = useState(false);
+    const [modeDPS, setmodeDPS] = useState(false);
+    const [modeAdmin, setmodeAdmin] = useState(false);
+    const [modeINSURANCE, setmodeINSURANCE] = useState(false);
 
     const [openSingUp, setOpenSingUp] = useState(false);
     const [openCardRegDPSofficerProfile, setOpenCardRegDPSofficerProfile] = useState(false);
@@ -93,13 +98,13 @@ const App = () => {
 
     const metaMask = useCallback(async () => {
         if (window.ethereum) {
-        window.web3 = new Web3(window.ethereum);
-        await window.ethereum.enable();
-    } else if (window.web3) {
-        window.web3 = new Web3(window.web3.currentProvider);
-    } else {
-        window.alert();
-    }
+            window.web3 = new Web3(window.ethereum);
+            await window.ethereum.enable();
+        } else if (window.web3) {
+            window.web3 = new Web3(window.web3.currentProvider);
+        } else {
+            window.alert();
+        }
     }, [] );
 
 
@@ -113,6 +118,16 @@ const App = () => {
         const contract = new web3.eth.Contract(safeTraffic.abi, networkData.address);
         setContract(contract);
     }, []);
+
+    useEffect(() => {
+        metaMask().then((r) => r);
+        loadData().then((r) => r);
+    }, [metaMask, loadData]);
+
+    window.ethereum.on('accountsChanged', (accounts) => {
+        setAccount(accounts);
+        setContract(contract);
+    });
 
     const toggleSingUp = () =>{
         setOpenSingUp(!openSingUp)
@@ -145,7 +160,7 @@ const App = () => {
     }
 
     const toggleCardVerifyInsuranceRequest = () =>{
-            setOpenCardVerifyInsuranceRequest(!openCardVerifyInsuranceRequest)
+        setOpenCardVerifyInsuranceRequest(!openCardVerifyInsuranceRequest)
     }
 
     const toggleCardPayInsuranceFee = () =>{
@@ -173,10 +188,25 @@ const App = () => {
     }
 
     const toggleGetDriverInfo = async () =>{
-        const data = await contract.methods.getDriverInfo().call();
-        console.log(data);
+        const data = await contract.methods.getDriverInfo().call({from: account});
+        const admin = await contract.methods.admins().call({from: account});
+        const Insurance = await contract.methods.Insurance().call({from: account});
         await setDataGetDriverInfo(data);
         setOpenCardUseGetDriverInfo(!openCardUseGetDriverInfo)
+        const data0 = await data[6];
+        if(account == admin){
+            toggleModeAdmin();
+            toggleModeNew();
+        }else if(data0 == 0){
+            toggleModeDriver();
+            toggleModeNew();
+        }else if(data0 == 1){
+            toggleModeDPS();
+            toggleModeNew();
+        }else if(account == Insurance){
+            toggleModeINSURANCE();
+            toggleModeNew();
+        }
     }
 
     const toggleGetDriversForDPS = async () =>{
@@ -214,75 +244,88 @@ const App = () => {
         await setDataGetFinesForDriver(data);
         setOpenGetFinesForDriver(!openGetFinesForDriver)
     }
+    const toggleModeNew = () =>{
+        setmodeNew(false)
+    }
+    const toggleModeDriver = () =>{
+        setmodeDriver(true)
+    }
+    const toggleModeDPS = () =>{
+        setmodeDPS(true)
+    }
+    const toggleModeAdmin = () =>{
+        setmodeAdmin(true)
+    }
+    const toggleModeINSURANCE = () =>{
+        setmodeINSURANCE(true)
+    }
 
-
-
-    useEffect(() => {
-        metaMask().then((r) => r);
-        loadData().then((r) => r);
-    }, [metaMask, loadData]);
-
-                return (
-            <DataContext.Provider value={{dataGetFinesForDriver, toggleGetFinesForDriver, dataGetDTPsForDriver, toggleGetDTPsForDriver, dataGetInsuranceRequests, toggleGetInsuranceRequests, dataGetVehiclesForDriver, toggleGetVehiclesForDriver, dataGetVehiclesForDPS, toggleGetVehiclesForDPS, dataGetGetDriversLicensesForDPS, toggleGetDriversLicensesForDPS, dataGetDriversForDPS, toggleGetDriversForDPS, dataGetDriverInfo, toggleCardPayFine, toggleCardRegisterFine, toggleCardInsuranceCasePayback, toggleCardConfirmDTP, toggleCardRegisterDTP, toggleCardPayInsuranceFee, toggleCardVerifyInsuranceRequest, toggleCardRequestInsurance, toggleCardRegisterVehicle, toggleCardVerifyVehicle, toggleCardDeactivateDriversLicense, toggleCardregDPSofficerProfile,toggleSingUp, contract, account, toggleGetDriverInfo, toggleCardRegDriversLicense, toggleCardVerifyDriversLicense}}>
-                <GlobalStyle/>
-                <Header/>
-                {openSingUp && <UseSingUp/>}
-                {openCardRegDPSofficerProfile && <UseRegDriverProfile/>}
-                {openCardUseGetDriverInfo && <UseGetDriverInfo/>}
-                {openCardRegDriversLicense && <UesCardRegDriversLicense/>}
-                {openCardVerifyDriversLicense && <UseVerifyDriversLicense/>}
-                {openCardDeactivateDriversLicense && <UseDeactivateDriversLicense/>}
-                {openCardRegisterVehicle && <UseCardRegisterVehicle/>}
-                {openCardVerifyVehicle && <UseCardVerifyVehicle/>}
-                {openCardRequestInsurance && <UseRequestInsurance/>}
-                {openCardVerifyInsuranceRequest && <UseVerifyInsuranceRequest/>}
-                {openCardPayInsuranceFee && <UsePayInsuranceFee/>}
-                {openCardRegisterDTP && <UseRegisterDTP/>}
-                {openCardConfirmDTP && <UseConfirmDTP/>}
-                {openCardInsuranceCasePayback && <UseInsuranceCasePayback/>}
-                {openCardRegisterFine && <UseRegisterFine/>}
-                {openCardPayFine && <UsePayFine/>}
-                {openGetDriversForDPS && <UseGetDriversForDPS/>}
-                {openGetGetDriversLicensesForDPS && <UseGetDriversLicensesForDPS/>}
-                {openGetVehiclesForDPS && <UseGetVehiclesForDPS/>}
-                {openGetVehiclesForDriver && <UseGetVehiclesForDriver/>}
-                {openGetInsuranceRequests && <UseGetInsuranceRequests/>}
-                {openGetDTPsForDriver && <UseGetDTPsForDriver/>}
-                {openGetFinesForDriver && <UseGetFinesForDriver/>}
-                <Main1>
-                    <CardSingUp/>
-                    <CardregDPSofficerProfile/>
-                    <CardRegDriversLicense/>
-                    <CardVerifyDriversLicense/>
-                    <CardDriversLicenseExtend/>
-                    <CardDeactivateDriversLicense/>
-                    <CardRegisterVehicle/>
-                </Main1>
-                <Main2>
-                    <CardVerifyVehicle/>
-                    <CardRequestInsurance/>
-                    <CardVerifyInsuranceRequest/>
-                    <CardPayInsuranceFee/>
-                    <CardRegisterDTP/>
-                    <CardConfirmDTP/>
-                    <CardInsuranceCasePayback/>
-                </Main2>
-                <Main3>
-                    <CardRegisterFine/>
-                    <CardPayFine/>
-                </Main3>
-                <Main4>
-                    <CardGetDriversForDPS/>
-                    <CardGetDriversLicensesForDPS/>
-                    <CardGetVehiclesForDPS/>
-                    <CardGetVehiclesForDriver/>
-                    <CardGetInsuranceRequests/>
-                    <CardGetDTPsForDriver/>
-                    <CardGetFinesForDriver/>
-                </Main4>
-            </DataContext.Provider>
-
-        );
+    return (
+        <DataContext.Provider value={{ dataGetFinesForDriver, toggleGetFinesForDriver, dataGetDTPsForDriver, toggleGetDTPsForDriver, dataGetInsuranceRequests, toggleGetInsuranceRequests, dataGetVehiclesForDriver, toggleGetVehiclesForDriver, dataGetVehiclesForDPS, toggleGetVehiclesForDPS, dataGetGetDriversLicensesForDPS, toggleGetDriversLicensesForDPS, dataGetDriversForDPS, toggleGetDriversForDPS, dataGetDriverInfo, toggleCardPayFine, toggleCardRegisterFine, toggleCardInsuranceCasePayback, toggleCardConfirmDTP, toggleCardRegisterDTP, toggleCardPayInsuranceFee, toggleCardVerifyInsuranceRequest, toggleCardRequestInsurance, toggleCardRegisterVehicle, toggleCardVerifyVehicle, toggleCardDeactivateDriversLicense, toggleCardregDPSofficerProfile,toggleSingUp, contract, account, toggleGetDriverInfo, toggleCardRegDriversLicense, toggleCardVerifyDriversLicense}}>
+            <GlobalStyle/>
+            <Header/>
+            {openSingUp && <UseSingUp/>}
+            {openCardRegDPSofficerProfile && <UseRegDriverProfile/>}
+            {openCardUseGetDriverInfo && <UseGetDriverInfo/>}
+            {openCardRegDriversLicense && <UesCardRegDriversLicense/>}
+            {openCardVerifyDriversLicense && <UseVerifyDriversLicense/>}
+            {openCardDeactivateDriversLicense && <UseDeactivateDriversLicense/>}
+            {openCardRegisterVehicle && <UseCardRegisterVehicle/>}
+            {openCardVerifyVehicle && <UseCardVerifyVehicle/>}
+            {openCardRequestInsurance && <UseRequestInsurance/>}
+            {openCardVerifyInsuranceRequest && <UseVerifyInsuranceRequest/>}
+            {openCardPayInsuranceFee && <UsePayInsuranceFee/>}
+            {openCardRegisterDTP && <UseRegisterDTP/>}
+            {openCardConfirmDTP && <UseConfirmDTP/>}
+            {openCardInsuranceCasePayback && <UseInsuranceCasePayback/>}
+            {openCardRegisterFine && <UseRegisterFine/>}
+            {openCardPayFine && <UsePayFine/>}
+            {openGetDriversForDPS && <UseGetDriversForDPS/>}
+            {openGetGetDriversLicensesForDPS && <UseGetDriversLicensesForDPS/>}
+            {openGetVehiclesForDPS && <UseGetVehiclesForDPS/>}
+            {openGetVehiclesForDriver && <UseGetVehiclesForDriver/>}
+            {openGetInsuranceRequests && <UseGetInsuranceRequests/>}
+            {openGetDTPsForDriver && <UseGetDTPsForDriver/>}
+            {openGetFinesForDriver && <UseGetFinesForDriver/>}
+             <NEW>
+                 {modeNew &&  <CardSingUp/>}
+             </NEW>
+            <DRIVER1>
+                   {modeDriver && <CardGetDTPsForDriver/> }
+                   {modeDriver && <CardRegDriversLicense/> }
+                   {modeDriver && <CardDriversLicenseExtend/>}
+                   {modeDriver && <CardRegisterVehicle/>}
+                   {modeDriver && <CardRequestInsurance/>}
+                   {modeDriver && <CardPayInsuranceFee/>}
+                   {modeDriver && <CardConfirmDTP/>}
+            </DRIVER1>
+            <DRIVER2>
+                   {modeDriver && <CardGetVehiclesForDriver/>}
+                   {modeDriver && <CardGetFinesForDriver/>}
+                   {modeDriver && <CardPayFine/>}
+            </DRIVER2>
+            <DPS1>
+                {modeDPS &&   <CardRegisterFine/>}
+                {modeDPS &&   <CardGetVehiclesForDPS/>}
+                {modeDPS &&   <CardGetDriversLicensesForDPS/>}
+                {modeDPS &&   <CardGetDriversForDPS/>}
+                {modeDPS &&   <CardVerifyDriversLicense/>}
+                {modeDPS &&   <CardDeactivateDriversLicense/>}
+                {modeDPS &&   <CardVerifyVehicle/>}
+            </DPS1>
+            <DPS2>
+                {modeDPS &&  <CardRegisterDTP/>}
+            </DPS2>
+            <ADMIN>
+                {modeAdmin && <CardregDPSofficerProfile/>}
+            </ADMIN>
+            <INSURANCE>
+                {modeINSURANCE && <CardVerifyInsuranceRequest/>}
+                {modeINSURANCE && <CardGetInsuranceRequests/>}
+                {modeINSURANCE && <CardInsuranceCasePayback/>}
+            </INSURANCE>
+        </DataContext.Provider>
+    );
 }
 
 export default App;

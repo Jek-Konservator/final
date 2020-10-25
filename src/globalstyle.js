@@ -17,15 +17,24 @@ body {
 
 `;
 
-export const Main1 = styled.div`
+export const NEW = styled.div`
 display: flex;
 `
-export const Main2 = styled.div`
+export const DRIVER1 = styled.div`
 display: flex;
 `
-export const Main3 = styled.div`
+export const DPS1 = styled.div`
 display: flex;
 `
-export const Main4 = styled.div`
+export const ADMIN = styled.div`
+display: flex;
+`
+export const INSURANCE = styled.div`
+display: flex;
+`
+export const DRIVER2 = styled.div`
+display: flex;
+`
+export const DPS2 = styled.div`
 display: flex;
 `
