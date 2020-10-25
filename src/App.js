@@ -210,37 +210,37 @@ const App = () => {
     }
 
     const toggleGetDriversForDPS = async () =>{
-        const data = await contract.methods.getDriversForDPS().call();
+        const data = await contract.methods.getDriversForDPS().call({from: account});
         await setDataGetDriversForDPS(data);
         setOpenGetDriversForDPS(!openGetDriversForDPS)
     }
     const toggleGetDriversLicensesForDPS = async () =>{
-        const data = await contract.methods.getDriversLicensesForDPS().call();
+        const data = await contract.methods.getDriversLicensesForDPS().call({from: account});
         await setDataGetDriversLicensesForDPS(data);
         setOpenGetDriversLicensesForDPS(!openGetGetDriversLicensesForDPS)
     }
     const toggleGetVehiclesForDPS = async () =>{
-        const data = await contract.methods.getVehiclesForDPS().call();
+        const data = await contract.methods.getVehiclesForDPS().call({from: account});
         await setDataGetVehiclesForDPS(data);
         setOpenGetVehiclesForDPS(!openGetVehiclesForDPS)
     }
     const toggleGetVehiclesForDriver = async () =>{
-        const data = await contract.methods.getVehiclesForDriver().call();
+        const data = await contract.methods.getVehiclesForDriver().call({from: account});
         await setDataGetVehiclesForDriver(data);
         setOpenGetVehiclesForDriver(!openGetVehiclesForDriver)
     }
     const toggleGetInsuranceRequests = async () =>{
-        const data = await contract.methods.getInsuranceRequests().call();
+        const data = await contract.methods.getInsuranceRequests().call({from: account});
         await setDataGetInsuranceRequests(data);
         setOpenGetInsuranceRequests(!openGetInsuranceRequests)
     }
     const toggleGetDTPsForDriver = async () =>{
-        const data = await contract.methods.getDTPsForDriver().call();
+        const data = await contract.methods.getDTPsForDriver().call({from: account});
         await setDataGetDTPsForDriver(data);
         setOpenGetDTPsForDriver(!openGetDTPsForDriver)
     }
     const toggleGetFinesForDriver = async () =>{
-        const data = await contract.methods.getFinesForDriver().call();
+        const data = await contract.methods.getFinesForDriver().call({from: account});
         await setDataGetFinesForDriver(data);
         setOpenGetFinesForDriver(!openGetFinesForDriver)
     }
